@@ -1,0 +1,270 @@
+/* =========================
+   PALETA RÚSTICA OLIVA
+   ========================= */
+:root {
+  --cor-primaria: #272b00;
+  --cor-secundaria: #54582f;
+  --cor-terciaria: #86895d;
+  --cor-quaternaria: #bec092;
+  --cor-clara: #f8fbca;
+
+  --fonte-titulo: 'Playfair Display', serif;
+  --fonte-corpo: 'Lato', sans-serif;
+}
+
+/* =========================
+   ESTILO GERAL
+   ========================= */
+body {
+  font-family: var(--fonte-corpo);
+  background-color: #fdfdf7;
+  color: var(--cor-primaria);
+  line-height: 1.7;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--fonte-titulo);
+  color: var(--cor-primaria);
+}
+
+/* =========================
+   NAVBAR
+   ========================= */
+#navbar {
+  background-color: var(--cor-primaria) !important;
+  border-radius: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  margin: 20px;
+  width: fit-content;
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  z-index: 1100;
+  transition: all 0.4s ease;
+}
+
+.navbar-nav {
+  gap: 10px;
+}
+
+#navbar .nav-link {
+  color: var(--cor-clara) !important;
+  font-size: 0.95rem;
+  text-align: center;
+  width: 150%;
+}
+
+#navbar .nav-link:hover {
+  color: var(--cor-quaternaria) !important;
+}
+
+.navbar.fixed {
+  position: fixed !important;
+  top: 20px !important;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: fit-content;
+}
+
+/* RESPONSIVO NAVBAR */
+@media (max-width: 991.98px) {
+  #navbar {
+    background-color: transparent !important;
+    box-shadow: none;
+    margin: 0;
+    width: 100%;
+    right: 0;
+    top: 10px;
+  }
+
+  .navbar-toggler {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    z-index: 1200;
+    border: none;
+    background: rgba(0,0,0,0.6);
+    border-radius: 10px;
+  }
+
+  .navbar-collapse {
+    background-color: rgba(0, 0, 0, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    width: 80%;
+    max-width: 300px;
+  }
+
+  .navbar-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  #navbar .nav-link {
+    text-align: left;
+    width: 100%;
+    font-size: 1.05rem;
+    padding-left: 10px;
+  }
+}
+
+/* =========================
+   HERO / HOME SECTION
+   ========================= */
+.hero-section {
+  position: relative;
+  height: 100vh;
+  background: url('/static/img/fotohome.jpg') no-repeat center center;
+  background-size: cover;
+  background-attachment: fixed;
+  padding: 0;
+  margin: 0;
+}
+
+.hero-section .overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  color: white;
+  text-align: center;
+}
+
+.hero-content h1 {
+  font-size: 4rem;
+  font-family: var(--fonte-titulo);
+  color: var(--cor-clara);
+}
+
+.hero-content p {
+  font-size: 1.25rem;
+  color: var(--cor-quaternaria);
+}
+
+@media (max-width: 576px) {
+  .hero-content h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero-content p {
+    font-size: 1rem;
+  }
+}
+
+/* =========================
+   CASAL SECTION
+   ========================= */
+#casal {
+  background-color: var(--cor-secundaria);
+  color: var(--cor-clara);
+}
+
+/* Carrossel */
+.carousel-container {
+  text-align: center;
+  position: relative;
+}
+
+.main-image-wrapper {
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+  border-radius: 12px;
+  position: relative;
+}
+
+.main-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.6s ease-in-out;
+}
+
+.thumbnail-bar {
+  margin-top: 15px;
+}
+
+.thumbnail-bar .thumb {
+  width: 65px;
+  height: 65px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 0 5px;
+  cursor: pointer;
+  opacity: 0.6;
+  border: 2px solid transparent;
+  transition: opacity 0.3s, border 0.3s, transform 0.2s;
+}
+
+.thumbnail-bar .thumb:hover,
+.thumbnail-bar .thumb.active {
+  opacity: 1;
+  border-color: var(--cor-quaternaria);
+  transform: scale(1.05);
+}
+
+.fade-in {
+  opacity: 0;
+}
+.fade-in.show {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .main-image-wrapper {
+    height: 300px;
+  }
+
+  .thumbnail-bar .thumb {
+    width: 55px;
+    height: 55px;
+  }
+}
+
+/* =========================
+   CERIMONIA SECTION
+   ========================= */
+.cerimonia-section {
+  background-color: var(--cor-primaria);
+  color: var(--cor-clara);
+}
+
+.cerimonia-banner img {
+  max-height: 500px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.map-responsive {
+  overflow: hidden;
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+}
+
+.map-responsive iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 8px;
+}
+.card-img-top {
+  width: 100%;
+  height: 250px; /* Você pode ajustar essa altura conforme desejar */
+  object-fit: cover;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
