@@ -4,7 +4,7 @@ from app.models import Comentario, Pagamento
 import requests
 import uuid
 import os
-from dotenv import load_dotenv()
+from dotenv import load_dotenv
 load_dotenv()
 # --- Página inicial ---
 @app.route('/')
@@ -203,5 +203,6 @@ def criar_comentario():
     )
     db.session.add(comentario)
     db.session.commit()
+
 
     return jsonify({"mensagem": "Comentário enviado com sucesso!"}), 201
