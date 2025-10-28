@@ -43,9 +43,6 @@ def pagar():
                 "success": "https://anavitoriaepietro.onrender.com/sucesso",
                 "cancel": "https://anavitoriaepietro.onrender.com/cancelado"
             },
-            "notification_urls": [
-        "https://anavitoriaepietro.onrender.com/notificacaopagbank"
-    ],
             "customer": {
                 "name": data["nome"],
                 "email": data["email"],
@@ -102,7 +99,7 @@ def verificar_status_pagamento(id_pagamento):
             return jsonify({"error": "Pagamento não encontrado"}), 404
 
         # Caso o pagamento tenha sido confirmado como 'PAGO'
-        if pagamento.status == "Paga":
+        if pagamento.status == "PAID":
             return jsonify({
                 "status": "PAGO",
                 "valor": pagamento.valor,
@@ -133,25 +130,49 @@ def sucesso():
 def cancelado():
     return "<h1>Pagamento cancelado.</h1>"
 
-
 # --- Recebe notificação do PagBank ---
 @app.route('/notificacaopagbank', methods=['POST'])
 def notificacao_pagbank():
     try:
         # Captura corpo e cabeçalhos
-        payload = request.get_json(silent=True) or request.data.decode('utf-8')
+        payload = request.get_json(silent=True)
+        if not payload:
+            payload = request.data.decode('utf-8')
+
         headers = dict(request.headers)
 
-        notificacao = NotificacaoPagBank(
-            payload=payload,
-            headers=headers
-        )
+        # 🔹 Salva a notificação completa (auditoria)
+        notificacao = NotificacaoPagBank(payload=payload, headers=headers)
         db.session.add(notificacao)
         db.session.commit()
 
-        print("🔔 Notificação recebida e salva:", payload)
+        # --- Extrai o reference_id ---
+        uuid_retorno = None
+        try:
+            # Normalmente vem dentro de payload["items"][0]["reference_id"]
+            items = payload.get("items", [])
+            if items and isinstance(items, list):
+                uuid_retorno = items[0].get("reference_id")
+        except Exception as e:
+            print("⚠️ Erro ao extrair reference_id:", e)
 
-        return jsonify({"message": "Notificação registrada com sucesso"}), 200
+        # --- Se tiver um reference_id, atualiza o pagamento correspondente ---
+        if uuid_retorno:
+            pagamento = Pagamento.query.filter_by(id_pagbank=uuid_retorno).first()
+
+            if pagamento:
+                # Atualiza status se vier no JSON (ex: PAID, CANCELED etc.)
+                novo_status = payload.get("charges", [{}])[0].get("status", "pendente")
+                pagamento.status = novo_status
+                db.session.commit()
+                print(f"✅ Pagamento {uuid_retorno} atualizado para status: {novo_status}")
+            else:
+                print(f"⚠️ Nenhum pagamento encontrado com id_pagbank={uuid_retorno}")
+
+        return jsonify({
+            "message": "Notificação registrada com sucesso",
+            "uuid": uuid_retorno
+        }), 200
 
     except Exception as e:
         print("❌ Erro ao processar notificação:", e)
@@ -184,7 +205,7 @@ def criar_comentario():
         return jsonify({"erro": "Pagamento não encontrado"}), 404
 
     # Verifica se o pagamento foi concluído
-    if pagamento.status != "Paga":
+    if pagamento.status != "PAID":
         return jsonify({"erro": "O pagamento ainda não foi concluído"}), 403
 
     # Cria o comentário
@@ -197,5 +218,3 @@ def criar_comentario():
     db.session.commit()
 
     return jsonify({"mensagem": "Comentário enviado com sucesso!"}), 201
-
-
