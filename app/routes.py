@@ -40,8 +40,8 @@ def pagar():
                 }
             ],
             "redirect_urls": {
-                "success": "http://localhost:5000/sucesso",
-                "cancel": "http://localhost:5000/cancelado"
+                "success": "https://anavitoriaepietro.onrender.com/cancelado",
+                "cancel": "https://anavitoriaepietro.onrender.com/sucesso"
             },
             "customer": {
                 "name": data["nome"],
@@ -206,3 +206,4 @@ def criar_comentario():
 
 
     return jsonify({"mensagem": "Comentário enviado com sucesso!"}), 201
+
