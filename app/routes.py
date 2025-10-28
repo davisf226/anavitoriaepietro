@@ -43,6 +43,9 @@ def pagar():
                 "success": "https://anavitoriaepietro.onrender.com/sucesso",
                 "cancel": "https://anavitoriaepietro.onrender.com/cancelado"
             },
+            "notification_urls": [
+        "https://abcd1234.ngrok-free.app/notificacaopagbank"
+    ],
             "customer": {
                 "name": data["nome"],
                 "email": data["email"],
@@ -194,3 +197,4 @@ def criar_comentario():
     db.session.commit()
 
     return jsonify({"mensagem": "Comentário enviado com sucesso!"}), 201
+
