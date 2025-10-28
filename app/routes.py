@@ -43,6 +43,7 @@ def pagar():
                 "success": "https://anavitoriaepietro.onrender.com/sucesso",
                 "cancel": "https://anavitoriaepietro.onrender.com/cancelado"
             },
+            "notification_urls": ["https://anavitoriaepietro.onrender.com/notificacaopagbank"],
             "customer": {
                 "name": data["nome"],
                 "email": data["email"],
