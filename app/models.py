@@ -1,5 +1,6 @@
 from app import db
 from datetime import datetime
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 class Comentario(db.Model):
@@ -46,3 +47,15 @@ class Pagamento(db.Model):
             "id_pagbank": self.id_pagbank,
             "criado_em": self.criado_em.strftime("%d/%m/%Y %H:%M"),
         }
+
+
+class NotificacaoPagBank(db.Model):
+    __tablename__ = "notificacoes_pagbank"
+
+    id = db.Column(db.Integer, primary_key=True)
+    recebido_em = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    payload = db.Column(JSONB, nullable=False)
+    headers = db.Column(JSONB, nullable=True)
+
+    def __repr__(self):
+        return f"<NotificacaoPagBank id={self.id} recebido_em={self.recebido_em}>"  
