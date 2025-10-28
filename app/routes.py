@@ -1,6 +1,6 @@
 from flask import jsonify, request, render_template
 from app import app, db
-from app.models import Comentario, Pagamento
+from app.models import Comentario, Pagamento, NotificacaoPagBank
 import requests
 import uuid
 import os
@@ -40,8 +40,8 @@ def pagar():
                 }
             ],
             "redirect_urls": {
-                "success": "https://anavitoriaepietro.onrender.com/cancelado",
-                "cancel": "https://anavitoriaepietro.onrender.com/sucesso"
+                "success": "https://anavitoriaepietro.onrender.com/sucesso",
+                "cancel": "https://anavitoriaepietro.onrender.com/cancelado"
             },
             "customer": {
                 "name": data["nome"],
@@ -134,36 +134,25 @@ def cancelado():
 # --- Recebe notificação do PagBank ---
 @app.route('/notificacaopagbank', methods=['POST'])
 def notificacao_pagbank():
-    notificacao = request.get_json()
-    if not notificacao:
-        return jsonify({"error": "Nenhum dado recebido"}), 400
+    try:
+        # Captura corpo e cabeçalhos
+        payload = request.get_json(silent=True) or request.data.decode('utf-8')
+        headers = dict(request.headers)
 
-    print("🔔 Notificação recebida:", notificacao)
-
-    transacao_id = notificacao.get('id')
-    status = notificacao.get('status')
-    valor = notificacao.get('amount', {}).get('value')
-    comprador = notificacao.get('customer', {}).get('name')
-    reference_id = notificacao.get('reference_id')
-
-    # Localiza o pagamento e atualiza status
-    pagamento = Pagamento.query.filter_by(id_pagbank = reference_id).first()
-    if pagamento:
-        pagamento.status = status
+        notificacao = NotificacaoPagBank(
+            payload=payload,
+            headers=headers
+        )
+        db.session.add(notificacao)
         db.session.commit()
 
-        """if status == "PAID" or status == "Paga":
-            comentario = Comentario(
-                convidado_nome=comprador or pagamento.nome,
-                convidado_comentario=f"{comprador or pagamento.nome} enviou um presente de R$ {pagamento.valor:.2f} ❤️",
-                convidado_id_pag=str(pagamento.id)
-            )
-            db.session.add(comentario)
-            db.session.commit()"""
-    if not pagamento:
-        return jsonify({"message": "pagamento não encontrado"})
-    return jsonify({"message": "Notificação processada com sucesso"}), 200
+        print("🔔 Notificação recebida e salva:", payload)
 
+        return jsonify({"message": "Notificação registrada com sucesso"}), 200
+
+    except Exception as e:
+        print("❌ Erro ao processar notificação:", e)
+        return jsonify({"error": str(e)}), 200  # ainda responde 200 pra não bloquear o reenvio
 
 # --- Lista todos os comentários ---
 @app.route("/comentarios", methods=["GET"])
@@ -204,6 +193,4 @@ def criar_comentario():
     db.session.add(comentario)
     db.session.commit()
 
-
     return jsonify({"mensagem": "Comentário enviado com sucesso!"}), 201
-
