@@ -43,6 +43,7 @@ def pagar():
                 "success": "https://anavitoriaepietro.onrender.com/sucesso",
                 "cancel": "https://anavitoriaepietro.onrender.com/cancelado"
             },
+            "redirect_url":"https://anavitoriaepietro.onrender.com/sucesso",
             "notification_urls": ["https://anavitoriaepietro.onrender.com/notificacaopagbank"],
             "customer": {
                 "name": data["nome"],
@@ -219,3 +220,4 @@ def criar_comentario():
     db.session.commit()
 
     return jsonify({"mensagem": "Comentário enviado com sucesso!"}), 201
+
