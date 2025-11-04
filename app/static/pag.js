@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (res.ok && data.checkout_url && data.pagamento_id) {
         pagamentoId = data.pagamento_id;
-        window.open(data.checkout_url, '_blank');
+        window.location.href = data.checkout_url;
         loader.style.display = 'block';
       } else {
         loader.style.display = 'none';
