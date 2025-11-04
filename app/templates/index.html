@@ -9,7 +9,11 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div style="color:rgb(94, 255, 0); text-align:center;">{{ messages[0] }}</div>
+    {% endif %}
+    {% endwith %}
   <!-- NAVBAR -->
   <nav id="navbar" class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2 px-4 rounded-4">
     <div class="container-fluid">
@@ -97,7 +101,7 @@
               <h5 class="card-title">Jantar Romântico</h5>
               <p class="card-text">Ajude a proporcionar uma noite especial!</p>
               <p class="fw-bold">R$ 5,00</p>
-              <button class="btn btn-success" onclick="abrirModal('Jantar Romântico', 200)">Presentear</button>
+              <button class="btn btn-success" onclick="abrirModal('Jantar Romântico', 5)">Presentear</button>
             </div>
           </div>
         </div>
@@ -185,4 +189,3 @@
   <script src="{{ url_for('static', filename='pag.js') }}"></script>
 </body>
 </html>
-
