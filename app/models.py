@@ -27,8 +27,11 @@ class Pagamento(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False)
+    nome_pagbank = db.Column(db.String(120))
+    token = db.Column(db.Integer, unique=True)
     cpf = db.Column(db.String(14))
-    email = db.Column(db.String(120))
+    email_site = db.Column(db.String(120))
+    email_pagbank = db.Column(db.String(120))
     presente = db.Column(db.String(120))
     valor = db.Column(db.Float, nullable=False)
     id_pagbank = db.Column(db.String(200), unique=True)
@@ -59,3 +62,14 @@ class NotificacaoPagBank(db.Model):
 
     def __repr__(self):
         return f"<NotificacaoPagBank id={self.id} recebido_em={self.recebido_em}>"  
+    
+
+class Lista_presenca(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    tell = db.Column(db.String(15), nullable=False)
+    status = db.Column(db.String(300), default='Pendente') 
+
+    def __repr__(self):
+        return f'<Presença {self.nome} - Status: {self.status}>'
