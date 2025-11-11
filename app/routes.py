@@ -4,12 +4,12 @@ from flask import (
 )
 from app import app, db
 from app.utils import enviar_email, gerar_token_seguro
-from app.models import Comentario, Pagamento, NotificacaoPagBank, Lista_presenca
+from app.models import Comentario, Pagamento, NotificacaoPagBank, Lista_presenca, Retorno
 import requests
 import uuid
 import os
 from dotenv import load_dotenv
-
+import json
 load_dotenv()
 
 # Constante simbólica para tokens já utilizados
@@ -18,87 +18,126 @@ TOKEN_USADO = 101
 
 # ==============================
 # 🌍 Rotas principais
-# ==============================
+# =============================+
 
 @app.route('/')
 def index():
     """Página inicial do site."""
     return render_template('index.html')
 
-
-# ==============================
-# 💳 Pagamentos (PagBank)
-# ==============================
-
 @app.route('/pagar', methods=['POST'])
 def pagar():
-    """
-    Inicia o processo de pagamento via PagBank.
-    Gera token único e cria o checkout.
-    """
+    """Inicia o processo de pagamento via PagBank com múltiplos itens."""
     from traceback import format_exc
     try:
         token = gerar_token_seguro()
         data = request.json or {}
         print("📦 Dados recebidos para pagamento:", data)
 
+        # Loga tudo que chega
+        retorno = Retorno(str_ret=json.dumps(data, ensure_ascii=False))
+        db.session.add(retorno)
+        db.session.commit()
+
+        nome = data.get("nome")
+        email = data.get("email")
+        cpf = data.get("cpf")
+        items = data.get("items", [])
+        total = float(data.get("total", 0))
+
+        if not nome or not email or not cpf or not items:
+            return jsonify({"error": "Dados incompletos."}), 400
+
         reference_id = str(uuid.uuid4())
         TOKEN = os.getenv('TOKEN')
         url_api = "https://sandbox.api.pagseguro.com/checkouts"
-
+        print(TOKEN, "============================================")
         headers = {
             "Authorization": f"Bearer {TOKEN}",
             "Content-Type": "application/json"
         }
 
+        # ===============================
+        # Estrutura correta dos itens
+        # ===============================
+        payload_items = []
+        for i, item in enumerate(items, start=1):
+            payload_items.append({
+                "reference_id": f"{reference_id}-{i}",
+                "name": item.get("name", f"Item {i}"),
+                "quantity": int(item.get("quantity", 1)),
+                "unit_amount": int(item.get("unit_amount", 0))
+            })
+
         payload = {
-            "items": [{
-                "reference_id": reference_id,
-                "name": data.get("presente", "produto"),
-                "quantity": 1,
-                "unit_amount": int(float(data["valor"]) * 100)
-            }],
-            "redirect_url": f"https://anavitoriaepietro.onrender.com/comentar/{token}",
-            "notification_urls": ["https://anavitoriaepietro.onrender.com/notificacaopagbank"],
+            "reference_id": reference_id,
             "customer": {
-                "name": data["nome"],
-                "email": data["email"],
-                "tax_id": data.get("cpf", "")
-            }
+                "name": nome,
+                "email": email,
+                "tax_id": cpf
+            },
+            "items": payload_items,
+            "notification_urls": ["https://anavitoriaepietro.onrender.com/notificacaopagbank"],
+            "redirect_url": f"https://anavitoriaepietro.onrender.com/comentar/{token}"
         }
+
+        print("📤 Enviando payload ao PagBank:", payload)
 
         resp = requests.post(url_api, headers=headers, json=payload)
         resp.raise_for_status()
         resp_json = resp.json()
+        print("📥 Retorno da API PagBank:", resp_json)
 
+        # Extrair link de pagamento (rel="PAY")
         link_checkout = next(
-            (link["href"] for link in resp_json.get("links", []) if link.get("rel") == "PAY"), None
+            (link["href"] for link in resp_json.get("links", []) if link.get("rel") == "PAY"),
+            None
         )
+
+        order_id = resp_json.get("id")
+        charge_id = None
+        status = "PENDENTE"
+
+        # Se houver charge criada, pega ID e status
+        if resp_json.get("charges"):
+            charge_id = resp_json["charges"][0].get("id")
+            status = resp_json["charges"][0].get("status", "PENDENTE")
 
         if not link_checkout:
             return jsonify({"error": "Link de checkout não encontrado"}), 500
 
+        # ===============================
+        # Gravar no banco
+        # ===============================
         novo_pagamento = Pagamento(
-            nome=data["nome"],
-            email_site=data["email"],
-            cpf=data["cpf"],
-            presente=data.get("presente", "produto"),
-            valor=float(data["valor"]),
-            status="PENDENTE",
-            id_pagbank=reference_id,
-            token=token
+            nome=nome,
+            email_site=email,
+            cpf=cpf,
+            presente=f"{len(items)} itens",
+            valor=total,
+            status=status,
+            id_pagbank=order_id,
+            token=token,
+            charge_id=charge_id,
+            items=json.dumps(items, ensure_ascii=False)
         )
+
         db.session.add(novo_pagamento)
         db.session.commit()
 
         print(f"✅ Pagamento criado ID {novo_pagamento.id} | Checkout: {link_checkout}")
-        return jsonify({"checkout_url": link_checkout, "pagamento_id": novo_pagamento.id}), 200
+        return jsonify({
+            "checkout_url": link_checkout,
+            "pagamento_id": novo_pagamento.id,
+            "order_id": order_id,
+            "charge_id": charge_id,
+            "status": status
+        }), 200
 
     except Exception as e:
         print("🔥 ERRO INTERNO EM /pagar:", e)
         print(format_exc())
         return jsonify({"error": "Erro interno no servidor"}), 500
-
 
 @app.route('/pagamento-status/<int:id_pagamento>', methods=['GET'])
 def verificar_status_pagamento(id_pagamento):
