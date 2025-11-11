@@ -32,6 +32,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   iniciarSlide();
 
+  // ===== FUNÇÃO DE CONVERSÃO DE PREÇO BRASILEIRO =====
+  function parsePrecoBRL(precoStr) {
+    return Number(
+      precoStr
+        .replace(/[^\d,]/g, '')  // remove tudo exceto dígitos e vírgulas
+        .replace(/\./g, '')      // remove pontos de milhar
+        .replace(',', '.')       // troca vírgula por ponto decimal
+    );
+  }
+
   // ===== CARRINHO =====
   const addButtons = document.querySelectorAll(".card button");
   const cartIcon = document.getElementById("cartIcon");
@@ -127,11 +137,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const desc = card.querySelector("p").textContent;
       const img = card.querySelector("img").src;
 
-      // 🔹 Captura o preço, se existir
+      // 🔹 Corrigido: captura o preço corretamente no formato BR
       const priceEl = card.querySelector(".price");
-      const price = priceEl
-        ? parseFloat(priceEl.textContent.replace("R$", "").replace(",", ".").trim())
-        : 0; // fallback: 0 se não houver preço
+      const price = priceEl ? parsePrecoBRL(priceEl.textContent) : 0;
 
       const existingItem = cart.find(item => item.title === title);
 
@@ -211,7 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const itemsToSend = cart.map(item => ({
       name: item.title,
       quantity: item.quantity,
-      unit_amount: Math.round(item.price * 100) // converte para centavos
+      unit_amount: Math.round(item.price * 100) // agora com preço correto
     }));
 
     const total = itemsToSend.reduce((sum, i) => sum + i.unit_amount * i.quantity, 0) / 100;
